@@ -1,36 +1,44 @@
-import * as XLSX from "xlsx"
+import ExcelJS from "exceljs";
 
-export function buildStationSheet(data: any[]) {
-  const ws = XLSX.utils.aoa_to_sheet([])
+export function applyTitleSheetStyle(worksheet: ExcelJS.Worksheet, columnCount: number) {
+  worksheet.getRow(1).font = { bold: true, size: 16 };
+  worksheet.getRow(2).font = { italic: true, size: 11, color: { argb: "FF475569" } };
+  worksheet.mergeCells(1, 1, 1, columnCount);
+  worksheet.mergeCells(2, 1, 2, columnCount);
+}
 
-  // 🧱 Header (merged like your sheet)
-  XLSX.utils.sheet_add_aoa(ws, [
-    ["OPERATORS DUTY REPORT"],
-    ["STATION: MUSALLA BS"],
-    [],
-    ["Name", "Total Days", "Completed", "Missing", "Total Hours"],
-  ])
+export function applyHeaderStyle(row: ExcelJS.Row) {
+  row.font = { bold: true, color: { argb: "FFFFFFFF" } };
+  row.alignment = { vertical: "middle", horizontal: "center" };
+  row.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF0F766E" },
+  };
+  row.eachCell((cell) => {
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFE2E8F0" } },
+      left: { style: "thin", color: { argb: "FFE2E8F0" } },
+      bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+      right: { style: "thin", color: { argb: "FFE2E8F0" } },
+    };
+  });
+}
 
-  // Merge title rows
-  ws["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
-  ]
+export function applyBodyBorders(worksheet: ExcelJS.Worksheet, startRow: number) {
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber < startRow) {
+      return;
+    }
 
-  // Add data
-  XLSX.utils.sheet_add_json(ws, data, {
-    origin: "A5",
-    skipHeader: true,
-  })
-
-  // Column widths
-  ws["!cols"] = [
-    { wch: 20 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 12 },
-    { wch: 15 },
-  ]
-
-  return ws
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+      cell.alignment = { vertical: "middle", horizontal: "left" };
+    });
+  });
 }

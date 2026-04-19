@@ -1,218 +1,108 @@
-import { Console } from "node:console"
+import { ParsedAttendanceOperation } from "@/lib/types";
+import { normalizeDate, normalizeName, normalizeStation, normalizeTime } from "@/lib/utils/time";
 
+type MessageContext = {
+  station: string | null;
+  date: string | null;
+  shift: string | null;
+};
 
-export interface Entry {
-  name: string
-  station: string
-  date: string
-  shift?: string
-  inTime?: string
-  outTime?: string
+function normalizeShift(value: string): string {
+  return value.replace(/\s+/g, " ").trim().toUpperCase();
 }
 
+function parseOperatorLine(
+  line: string,
+  context: MessageContext,
+  fallbackType: ParsedAttendanceOperation["type"] | null
+): ParsedAttendanceOperation | null {
+  const match = line.match(/^(.+?)\s*-\s*(IN|OUT)\s*:\s*(.+)$/i);
+  const looseMatch = line.match(/^(.+?)\s*-\s*(.+)$/);
 
-const SHIFT_MAP = {
-  MORNING: "06:00-14:00",
-  AFTERNOON: "14:00-22:00",
-  EVENING: "14:00-22:00",
-  NIGHT: "22:00-06:00",
-}
+  let name = "";
+  let type: ParsedAttendanceOperation["type"] | null = fallbackType;
+  let rawTime = "";
 
-function clean(line: string) {
-  return line.replace(/\*/g, "").replace(/➡️|↪️/g, "").trim()
-}
+  if (match) {
+    name = match[1];
+    type = match[2].toUpperCase() === "IN" ? "CHECK_IN" : "CHECK_OUT";
+    rawTime = match[3];
+  } else if (looseMatch && fallbackType) {
+    name = looseMatch[1];
+    rawTime = looseMatch[2].replace(/^(IN|OUT)\s*:\s*/i, "");
+  } else {
+    return null;
+  }
 
-function normalizeTime(t: string) {
-  return t.replace(".", ":")
-}
-
-// const raw = `YOUR_FULL_TEXT_HERE`
-
-// const messages = raw.split(/\[\d{1,2}:\d{2}.*?\]/g).filter(Boolean)
-
-type ParsedData = {
-  station: string | null
-  shift: string | null
-  date: string | null
-  operators: string[]
-  inTimes: string[]
-  outTimes: string[]
-  driver: string | null
-  vehicle: string | null
-}
-
-const STATIONS = ["MUSALLA", "SEEF", "HOORA", "SALMANIYA", "SALMABAD"]
-
-function parseMessage(text: string): ParsedData {
-  const upper = text.toUpperCase()
-
-  // ✅ STATION
-  const stationMatch = STATIONS.find((s) => upper.includes(s))
-
-  // ✅ SHIFT
-  const shiftMatch =
-    upper.match(/MORNING|AFTERNOON|EVENING|NIGHT/)?.[0] || null
-
-  // ✅ DATE (multiple formats handled)
-  const dateMatch =
-    text.match(/\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}/)?.[0] || null
-
-  // ✅ OPERATORS
-  const operators =
-    [...text.matchAll(/OPR[^A-Z0-9]*([A-Z][A-Z\s]+)/gi)].map(
-      (m) => m[1].trim()
-    ) || []
-
-  // ✅ IN TIMES
-  const inTimes =
-    [...text.matchAll(/IN\s*TIME[^0-9]*([\d:.]+\s*(AM|PM)?)/gi)].map(
-      (m) => m[1]
-    ) || []
-
-  // also capture "@ 06:04 AM" style
-  const inlineTimes =
-    [...text.matchAll(/@\s*([\d:.]+\s*(AM|PM)?)/gi)].map((m) => m[1])
-
-  // merge
-  const allInTimes = [...inTimes, ...inlineTimes]
-
-  // ✅ OUT TIMES
-  const outTimes =
-    [...text.matchAll(/OUT\s*TIME[^0-9]*([\d:.]+\s*(AM|PM)?)/gi)].map(
-      (m) => m[1]
-    ) || []
-
-  // ✅ DRIVER
-  const driver =
-    text.match(/DRIVER[:\s-]*([A-Z]+)/i)?.[1] || null
-
-  // ✅ VEHICLE
-  const vehicle =
-    text.match(/VEHICLE[^0-9]*([0-9]+)/i)?.[1] || null
+  const normalizedTime = normalizeTime(rawTime);
+  if (!type || !normalizedTime) {
+    return null;
+  }
 
   return {
-    station: stationMatch || null,
-    shift: shiftMatch,
-    date: dateMatch,
-    operators,
-    inTimes: allInTimes,
-    outTimes,
-    driver,
-    vehicle,
-  }
+    type,
+    name: normalizeName(name),
+    time: normalizedTime,
+    station: context.station,
+    date: context.date,
+    shift: context.shift,
+    sourceLine: line,
+  };
 }
 
+export function parseWhatsappMessage(message: string): ParsedAttendanceOperation[] {
+  const lines = message
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 
+  const context: MessageContext = {
+    station: null,
+    date: null,
+    shift: null,
+  };
 
+  const operations: ParsedAttendanceOperation[] = [];
+  let currentType: ParsedAttendanceOperation["type"] | null = null;
 
-
-export function parseWhatsapp(text: string): Entry[] {
-
-
-// const parsedResults : ParsedData[] = messages.map((msg) => parseMessage(msg))
-
-// console.log(parsedResults, "parsedResults");
-
-
-  const lines = text.split("\n")
-
-  let station = ""
-  let date = ""
-  let shift = ""
-
-  let lastName = "" // for multi-line cases
-
-  const entries: Entry[] = []
-  const map: Record<string, Entry> = {}
-
-  for (let raw of lines) {
-    let line = clean(raw)
-    let upper = line.toUpperCase()
-
-    // ✅ STATION (FIXED)
-    const foundStation = STATIONS.find((s) => upper.includes(s))
-    if (foundStation) {
-      station = foundStation
+  for (const line of lines) {
+    if (/^CHECK[-\s]?IN:?$/i.test(line) || /^OPR:?$/i.test(line)) {
+      currentType = "CHECK_IN";
+      continue;
     }
 
-    // 📅 DATE
-    const d = line.match(/\d{2}[-/]\d{2}[-/]\d{4}/)
-    if (d) date = d[0]
-
-    // 🔁 SHIFT
-    if (upper.includes("MORNING")) shift = "MORNING"
-    if (upper.includes("AFTERNOON")) shift = "AFTERNOON"
-    if (upper.includes("EVENING")) shift = "EVENING"
-    if (upper.includes("NIGHT")) shift = "NIGHT"
-
-    // =========================
-    // ✅ NAME + TIME (INLINE)
-    // =========================
-    const inlineMatch = line.match(
-      /OPR.*?[-:]?\s*([A-Za-z ]+).*?(\d{1,2}[:.]\d{2})/i
-    )
-
-    if (inlineMatch) {
-      const name = inlineMatch[1].trim()
-      const t = normalizeTime(inlineMatch[2])
-
-      const entry: Entry = {
-        name,
-        station,
-        date,
-        shift,
-        inTime: t,
-      }
-
-      entries.push(entry)
-      map[name] = entry
-      lastName = name
-      continue
+    if (/^CHECK[-\s]?OUT:?$/i.test(line) || /^OUT:?$/i.test(line)) {
+      currentType = "CHECK_OUT";
+      continue;
     }
 
-    // =========================
-    // ✅ NAME ONLY (MULTI-LINE)
-    // =========================
-    const nameOnly = line.match(/OPR.*?[-:]?\s*([A-Za-z ]+)$/i)
-    if (nameOnly) {
-      lastName = nameOnly[1].trim()
-
-      const entry: Entry = {
-        name: lastName,
-        station,
-        date,
-        shift,
-      }
-
-      entries.push(entry)
-      map[lastName] = entry
-      continue
+    const stationMatch = line.match(/^STATION\s*:\s*(.+)$/i);
+    if (stationMatch) {
+      context.station = normalizeStation(stationMatch[1]);
+      continue;
     }
 
-    // =========================
-    // ✅ IN TIME (NEXT LINE)
-    // =========================
-    const inOnly = line.match(/IN.*?(\d{1,2}[:.]\d{2})/i)
-    if (inOnly && lastName && map[lastName]) {
-      map[lastName].inTime = normalizeTime(inOnly[1])
+    const dateMatch = line.match(/^DATE\s*:\s*(.+)$/i);
+    if (dateMatch) {
+      context.date = normalizeDate(dateMatch[1]);
+      continue;
     }
 
-    // =========================
-    // 🔴 OUT TIME
-    // =========================
-    const outMatch = line.match(/OUT.*?(\d{1,2}[:.]\d{2})/i)
+    const shiftMatch = line.match(/^SHIFT\s*:\s*(.+)$/i);
+    if (shiftMatch) {
+      context.shift = normalizeShift(shiftMatch[1]);
+      continue;
+    }
 
-    if (outMatch) {
-      const t = normalizeTime(outMatch[1])
-
-      if (lastName && map[lastName]) {
-        map[lastName].outTime = t
-      } else if (entries.length > 0) {
-        entries[entries.length - 1].outTime = t
-      }
+    const parsedLine = parseOperatorLine(line, context, currentType);
+    if (parsedLine) {
+      operations.push(parsedLine);
     }
   }
 
-  return entries
+  return operations;
 }
 
+export const parseWhatsapp = parseWhatsappMessage;
+export const parseMessages = parseWhatsappMessage;

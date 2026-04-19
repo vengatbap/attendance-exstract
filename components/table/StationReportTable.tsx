@@ -1,50 +1,44 @@
-export default function StationReportTable({ data }) {
-  const map = {}
+import { StationReportRow } from "@/lib/types";
+import { formatHours } from "@/lib/utils/time";
 
-  data.forEach((e) => {
-    if (!map[e.name]) {
-      map[e.name] = {
-        name: e.name,
-        days: 0,
-        hours: 0,
-        missing: 0,
-      }
-    }
+type StationReportTableProps = {
+  data: StationReportRow[];
+};
 
-    map[e.name].days++
-
-    if (e.status === "Completed") {
-      map[e.name].hours += Number(e.workHours || 0)
-    }
-
-    if (e.status === "Pending") {
-      map[e.name].missing++
-    }
-  })
-
-  const rows = Object.values(map)
-
+export default function StationReportTable({ data }: StationReportTableProps) {
   return (
-    <table className="w-full border">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Days</th>
-          <th>Total Hours</th>
-          <th>Missing</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {rows.map((r, i) => (
-          <tr key={i}>
-            <td>{r.name}</td>
-            <td>{r.days}</td>
-            <td>{r.hours}</td>
-            <td>{r.missing}</td>
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-slate-200 text-slate-500">
+            <th className="px-4 py-3 font-medium">Operator</th>
+            <th className="px-4 py-3 font-medium">Station</th>
+            <th className="px-4 py-3 font-medium">Total Days</th>
+            <th className="px-4 py-3 font-medium">Completed</th>
+            <th className="px-4 py-3 font-medium">Missing</th>
+            <th className="px-4 py-3 font-medium">Total Hours</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  )
+        </thead>
+        <tbody>
+          {data.map((row) => (
+            <tr key={`${row.station}-${row.name}`} className="border-b border-slate-100">
+              <td className="px-4 py-3">{row.name}</td>
+              <td className="px-4 py-3">{row.station}</td>
+              <td className="px-4 py-3">{row.totalDays}</td>
+              <td className="px-4 py-3">{row.completedDays}</td>
+              <td className="px-4 py-3">{row.missingDays}</td>
+              <td className="px-4 py-3">{formatHours(row.totalHours)}</td>
+            </tr>
+          ))}
+          {!data.length ? (
+            <tr>
+              <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                No station report rows match the selected filters.
+              </td>
+            </tr>
+          ) : null}
+        </tbody>
+      </table>
+    </div>
+  );
 }
