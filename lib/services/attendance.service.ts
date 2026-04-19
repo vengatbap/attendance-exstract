@@ -1,33 +1,33 @@
-// import { mergeParsedEntries, previewOperations } from "@/lib/store";
-// import { parseWhatsappMessage } from "@/lib/parser";
-// import { ParseResponse } from "@/lib/types";
+import { mergeParsedEntries, previewOperations } from "@/lib/store";
+import { parseWhatsappMessage } from "@/lib/parser";
+import { ParseResponse } from "@/lib/types";
 
-// function buildSummary(records: ParseResponse["records"], parsedLines: number) {
-//   return {
-//     parsedLines,
-//     touchedRecords: records.length,
-//     completed: records.filter((record) => record.status === "Completed").length,
-//     pending: records.filter((record) => record.status === "Pending").length,
-//     errors: records.filter((record) => record.status === "Error").length,
-//   };
-// }
+function buildSummary(records: ParseResponse["records"], parsedLines: number) {
+  return {
+    parsedLines,
+    touchedRecords: records.length,
+    completed: records.filter((record) => record.status === "Completed").length,
+    pending: records.filter((record) => record.status === "Pending").length,
+    errors: records.filter((record) => record.status === "Error").length,
+  };
+}
 
-// export async function parseAttendanceMessage(
-//   message: string,
-//   options: { persist: boolean }
-// ): Promise<ParseResponse> {
-//   const operations = parseWhatsappMessage(message);
-//   const result = options.persist
-//     ? await mergeParsedEntries(operations)
-//     : await previewOperations(operations);
+export async function parseAttendanceMessage(
+  message: string,
+  options: { persist: boolean }
+): Promise<ParseResponse> {
+  const operations = parseWhatsappMessage(message);
+  const result = options.persist
+    ? await mergeParsedEntries(operations)
+    : await previewOperations(operations);
 
-//   return {
-//     saved: options.persist,
-//     operations,
-//     records: result.touchedRecords,
-//     summary: buildSummary(result.touchedRecords, operations.length),
-//   };
-// }
+  return {
+    saved: options.persist,
+    operations,
+    records: result.touchedRecords,
+    summary: buildSummary(result.touchedRecords, operations.length),
+  };
+}
 
 
 function toMinutes(t: string) {
