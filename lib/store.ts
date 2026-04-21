@@ -8,9 +8,15 @@ import {
   normalizeName,
   normalizeStation,
   toMinutes,
-} from "@/lib/utils/time";
+} from "@/lib/utils/time";  
 
 const storePath = path.join(process.cwd(), "data", "attendance.json");
+
+type StoreShape = {
+  sequence: number;
+  records: AttendanceRecord[];
+};
+
 
 function buildRecordKey(name: string, date: string, station: string): string {
   return `${normalizeName(name).toLowerCase()}|${date}|${normalizeStation(station)}`;
@@ -44,23 +50,23 @@ function enrichRecord(record: AttendanceRecord): AttendanceRecord {
 }
 
 async function ensureStore() {
-  await fs.mkdir(path.dirname(dbPath), { recursive: true });
+  await fs.mkdir(path.dirname(storePath), { recursive: true });
   try {
-    await fs.access(dbPath);
+    await fs.access(storePath);
   } catch {
     const initial: StoreShape = { sequence: 0, records: [] };
-    await fs.writeFile(dbPath, JSON.stringify(initial, null, 2), "utf8");
+    await fs.writeFile(storePath, JSON.stringify(initial, null, 2), "utf8");
   }
 }
 
 async function readStore() {
   await ensureStore();
-  const raw = await fs.readFile(dbPath, "utf8");
+  const raw = await fs.readFile(storePath, "utf8");
   return JSON.parse(raw) as StoreShape;
 }
 
 async function writeStore(store: StoreShape) {
-  await fs.writeFile(dbPath, JSON.stringify(store, null, 2), "utf8");
+  await fs.writeFile(storePath, JSON.stringify(store, null, 2), "utf8");
 }
 
 function cloneStore(store: AttendanceStore): AttendanceStore {

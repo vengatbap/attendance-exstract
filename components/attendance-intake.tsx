@@ -10,18 +10,174 @@ type AttendanceIntakeProps = {
   showDashboardLink?: boolean;
 };
 
-const SAMPLE_MESSAGE = `CHECK-IN:
-STATION: MUSALLA BS
-DATE: 18-04-2026
-SHIFT: MORNING (06:00 - 14:00)
-OPR:
-Syedali - IN: 06:04
-Arun - IN: 06:04
+const SAMPLE_MESSAGE = `[10:13 PM, 4/18/2026] +973 3558 4584: *18-4-2026
 
-CHECK-OUT:
-OUT:
-Syedali - OUT: 14:10
-Arun - OUT: 14:10`;
+*Hoora  BS
+
+         *  Afternoon shift*
+Duty Time: ( 2 to 10 )*
+
+OPR:-  * Jaffar Hasan Sarhan * 
+IN       : 1:48
+out     : 10:00
+[10:17 PM, 4/18/2026] +973 3447 2792: EWA MUSALLA BS
+18/4/2026
+AFTERNOON SHIFT
+OPR:-ALAA ZAKAREYA 
+IN TIME:-1:57pm 
+OUT TIME:-10:00pm
+[6:07 AM, 4/19/2026] Jawed EWA KTS: *EWA  SEEF BS 
+
+ Date :  18/4/2026
+ 
+ *Night SHIFT_
+
+OPR.     -  Mahmood jawadq⅝
+
+Duty Time:- 22:00to6:00
+
+In time:21:58
+out :6:00
+[6:13 AM, 4/19/2026] Syed Ahmed KTS: 19-4-2026
+
+EWA SEEF BS 
+
+       *Morning Shift *
+
+Duty Time: ( 6 to 2 )*
+
+OPR:-  * sayed Ahmed* 
+
+IN       : 5:55
+out     :
+[2:18 PM, 4/19/2026] +973 3757 7277: EWA  SALMABAD
+
+ Date : 19/4/2026
+ 
+ *Morning SHIFT*
+
+OPR      -    Jassim mohammad
+
+OPR.     -    
+
+
+Duty Time:-  6:00am TO 2:00pm
+In time: 6:00am
+Out time: 2:00pm
+[2:19 PM, 4/19/2026] +973 3447 2792: EWA MUSALLA BS
+19/4/2026
+MORNING SHIFT
+OPR:-ALAA ZAKAREYA 
+IN TIME:-6:10am 
+OUT TIME:-2:00pm
+[9:46 PM, 4/19/2026] Jawed EWA KTS: *EWA  SEEF BS 
+
+ Date :  19/4/2026
+ 
+ *Night SHIFT_
+
+OPR.     -  Mahmood jawadq⅝
+
+Duty Time:- 22:00to6:00
+
+In time:21:46
+out :
+[5:46 AM, 4/20/2026] +973 3722 5536: 19-4-2026 (Sunday)
+
+EWA Salmabad FS 
+
+         Afternoon Shift
+
+Duty Time: (2pm-10pm)
+
+OPR:-  Murtadha Alaradi
+
+IN       : 1.42pm
+Out:   :  10.00pm
+[6:18 AM, 4/20/2026] Syed Ahmed KTS: 19-4-2026
+
+EWA SEEF BS 
+
+       *Morning Shift *
+
+Duty Time: ( 6 to 2 )*
+
+OPR:-  * sayed Ahmed* 
+
+IN       : 5:55
+out     : 2:00
+[6:19 AM, 4/20/2026] Syed Ahmed KTS: 20-4-2026
+
+EWA SEEF BS 
+
+       *Morning Shift *
+
+Duty Time: ( 6 to 2 )*
+
+OPR:-  * sayed Ahmed* 
+
+IN       : 6:00
+out     :
+[2:45 PM, 4/20/2026] +973 3722 5536: 20-4-2026 (Monday)
+
+EWA Salmabad FS 
+
+         Morning Shift
+
+Duty Time: (6am-2pm)
+
+OPR:-  Murtadha Alaradi
+
+IN       : 5.37am
+Out:   :  1.58pm
+[2:50 PM, 4/20/2026] +973 3558 4584: 20-4-2026
+
+*Hoora  BS
+
+         *  Morning shift*
+Duty Time: ( 6 to 2 )*
+
+OPR:-  * Jaffar Hasan Sarhan * 
+IN       : 5:40
+out     : 2:00
+[2:51 PM, 4/20/2026] Syed Ahmed KTS: 20-4-2026
+
+EWA SEEF BS 
+
+       *Morning Shift *
+
+Duty Time: ( 6 to 2 )*
+
+OPR:-  * sayed Ahmed* 
+
+IN       : 6:00
+out     : 2:00
+[9:53 PM, 4/20/2026] Jawed EWA KTS: *EWA  SEEF BS 
+
+ Date :  20/4/2026
+ 
+ *Night SHIFT_
+
+OPR.     -  Mahmood jawadq⅝
+
+Duty Time:- 22:00to6:00
+
+In time:21:46
+out :21:52
+[10:44 PM, 4/20/2026] +973 3757 7277: EWA  SALMABAD
+
+ Date : 20/4/2026
+ 
+ *_ AFTERNOON SHIFT_*
+
+OPR      -    Jassim mohammad
+
+OPR.     -    
+
+
+Duty Time:-  2:00pm TO 10:00pm
+In time: 1:42pm
+Out time: 10:00pm`
 
 async function readJson<T>(response: Response): Promise<T> {
   const data = (await response.json().catch(() => null)) as T | null;

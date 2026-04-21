@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { parseMessages } from "@/lib/parser"
-import { praserStrictMessages } from "@/lib/parser/praserStrict"
+// import { praserStrictMessages } from "@/lib/parser/praserStrict"
 import { validate } from "@/lib/validator"
 import { db } from "@/lib/db"
 import { shifts } from "@/lib/db/schema"
@@ -10,8 +10,7 @@ export async function POST(req: Request) {
 
   const parsed = parseMessages(text)
   const validated = validate(parsed)  
-  
-  return NextResponse.json(validated)
+
   
   for (const row of validated) {
     await db.insert(shifts).values({
@@ -23,6 +22,10 @@ export async function POST(req: Request) {
       remarks: row.remarks,
     })
   }
-  return Response.json(validated)   
+
+  return NextResponse.json(validated)
+  
+
 }
+
 

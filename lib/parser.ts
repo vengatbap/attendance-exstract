@@ -104,5 +104,4 @@ export function parseWhatsappMessage(message: string): ParsedAttendanceOperation
   return operations;
 }
 
-export const parseWhatsapp = parseWhatsappMessage;
 export const parseMessages = parseWhatsappMessage;

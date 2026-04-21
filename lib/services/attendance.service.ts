@@ -29,7 +29,6 @@ export async function parseAttendanceMessage(
   };
 }
 
-
 function toMinutes(t: string) {
   const [h, m] = t.split(":").map(Number)
   return h * 60 + m

@@ -152,3 +152,4 @@ export function parseStrict(text: string): Entry[] {
 
   return Object.values(map)
 }
+export const praserStrictMessages = parseStrict;

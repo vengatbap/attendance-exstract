@@ -6,6 +6,7 @@ import { currentIsoDate } from "@/lib/utils/time";
 import { getDailyLogs, getOperatorTimesheet, getStationReport } from "@/lib/services/report.service";
 
 export default async function DashboardPage() {
+  
   const session = await getSession();
 
   if (!session) {
